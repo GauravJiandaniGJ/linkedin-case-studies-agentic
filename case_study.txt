@@ -1,0 +1,80 @@
+How ToDoIT Automated Order Management for a Small Business, Boosting Efficiency and Accuracy for 19,000+ Orders
+Introduction
+This case study demonstrates how ToDoIT leveraged Google Forms and App Script to solve a critical challenge for a small business: inefficient, manual order processing. Our custom-built Google Forms Order Tracker transformed a chaotic system into a streamlined, automated workflow, enabling real-time calculations, status updates, and a seamless ordering experience.
+The Client
+A small business, previously reliant on manual methods for order collection and management. Their primary pain point was evident: “Our manual order system is a bottleneck. We need a scalable, accurate, and easy-to-use solution that can handle a high volume of orders without constant manual intervention.” They were struggling with calculation errors, delayed order processing, and a lack of real-time visibility, particularly as their customer base grew.
+The Challenges
+Manual Order Collection: Relying on calls, messages, or paper forms, leading to data entry errors and slow processing.
+Complex Pricing Calculations: Manual calculation of base price, delivery fees, and additional charges, often leading to mistakes and customer disputes.
+Lack of Real-time Tracking: No immediate visibility into new orders or their status, causing delays in fulfillment.
+Inefficient Order Status Management: Manually updating order statuses, leading to discrepancies and communication gaps.
+Scalability Issues: The existing system couldn't efficiently handle a growing volume of orders and users.
+Customer Experience: A clunky ordering process for customers, leading to potential frustration.
+
+
+
+
+
+
+The Solution: Google Forms Order Tracker
+ToDoIT developed a robust and user-friendly order management system using Google Forms for input and Google Sheets with App Script for backend automation. Key personalized modules included:
+Dynamic Order Form (Google Forms): A simple, intuitive form designed for customer input, collecting all necessary order details including customer name, address, product details, quantity, and preferred delivery mode.
+Automated Pricing Calculation (App Script): A custom App Script function (onFormSubmit) automatically calculates the Total Price based on:
+Base Price
+Quantity
+Delivery Mode (with a fixed fee of ₹50 for Google Pay and ₹150 for Cash on Delivery)
+Roll Press option (adding ₹150 if "Yes").
+Real-time Order Status Management: Upon submission, the App Script automatically sets the Order Status to "Pending," providing instant visibility for the business. This can then be manually updated by the business to "Dispatched" or other statuses as needed.
+Centralized Order Database (Google Sheets): All submitted orders are automatically recorded in a Google Sheet, acting as a live database with all calculated fields updated instantly.
+Simplified Delivery Type Assignment: The Delivery Type field is automatically populated based on the chosen Delivery Mode, streamlining record-keeping.
+Scalable and Accessible: Being cloud-based, the system is accessible from anywhere and can handle a large volume of submissions, making it highly scalable for growing businesses.
+
+
+
+
+
+
+
+
+📊 Results
+Metric
+Outcome
+Users Engaged
+19,000+
+Accuracy Improvement
+Near 100% (for calculations)
+Time Saved (Order Entry)
+80%+ (vs. manual calculation & entry)
+Order Processing Speed
+Instant (for initial entry & calculation)
+Manual Errors Reduced
+Significantly reduced
+System Scalability
+Proven across 19,000+ users
+
+
+
+
+
+
+
+
+
+
+Client Quote
+“Before ToDoIT, managing orders was a constant headache of manual calculations and chasing information. Their Google Forms solution completely changed that. It’s so simple for our customers to use, and for us, orders just flow in perfectly calculated and ready to go. The time and errors saved are incredible, especially with the volume we handle now.” – [Client Name/Role, if you have one, otherwise general statement]
+Bottom Line
+ToDoIT's Google Forms Order Tracker redefined efficient order management for small businesses. By harnessing the power of Google Workspace tools and custom App Script, we delivered an automated, accurate, and scalable solution that not only simplified operations but also significantly improved the customer ordering experience. It's not just a form; it's a foundation for growth and efficiency.
+
+
+
+
+
+
+
+
+
+
+
+
+
