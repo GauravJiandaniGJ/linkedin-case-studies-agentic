@@ -4,8 +4,11 @@ from datetime import datetime
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.prompt import Confirm
 from src.agents.writer import WriterAgent
 from src.agents.critic import CriticAgent
+from src.agents.image_generator import ImageGeneratorAgent
+from src.agents.image_critic import ImageCriticAgent
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,12 +16,25 @@ load_dotenv()
 class AgentOrchestrator:
     """Orchestrates the interaction between Writer and Critic agents"""
     
-    def __init__(self, llm_provider: Optional[str] = None):
+    def __init__(self, llm_provider: Optional[str] = None, enable_images: bool = True):
+        self.console = Console()
         self.writer = WriterAgent(llm_provider)
         self.critic = CriticAgent(llm_provider)
+        self.enable_images = enable_images
+        
+        # Initialize image agents if enabled
+        if self.enable_images:
+            try:
+                self.image_generator = ImageGeneratorAgent(llm_provider)
+                self.image_critic = ImageCriticAgent(llm_provider)
+            except Exception as e:
+                self.console.print(f"[yellow]Warning: Image generation disabled due to error: {e}[/yellow]")
+                self.enable_images = False
+        
         self.max_iterations = int(os.getenv("MAX_ITERATIONS", 5))
-        self.console = Console()
+        self.max_image_iterations = int(os.getenv("MAX_IMAGE_ITERATIONS", 3))
         self.iteration_history: List[Dict] = []
+        self.image_history: List[Dict] = []
     
     def run(self, case_study: str) -> str:
         """
@@ -71,8 +87,13 @@ class AgentOrchestrator:
             # Max iterations reached
             self.console.print("\n[bold yellow]⚠️  Maximum iterations reached[/bold yellow]")
         
+        # Generate image if enabled
+        image_info = None
+        if self.enable_images:
+            image_info = self._generate_and_validate_image(current_post)
+        
         # Display summary
-        self._display_summary()
+        self._display_summary(image_info)
         
         return current_post
     
@@ -97,10 +118,99 @@ class AgentOrchestrator:
         )
         self.console.print(panel)
     
-    def _display_summary(self):
+    def _generate_and_validate_image(self, final_post: str) -> Optional[Dict]:
+        """Generate and validate image for the final LinkedIn post"""
+        self.console.print("\n[bold purple]🎨 Generating Image for LinkedIn Post[/bold purple]")
+        
+        try:
+            # Generate initial image
+            self.console.print("[yellow]🖼️  Generating image...[/yellow]")
+            image_info = self.image_generator.generate_image(final_post)
+            
+            self._display_image_info(image_info, "Generated Image")
+            
+            # Validate image with critic
+            current_image = image_info
+            
+            for iteration in range(1, self.max_image_iterations + 1):
+                self.console.print(f"\n[cyan]🔍 Image Validation {iteration}/{self.max_image_iterations}[/cyan]")
+                
+                analysis = self.image_critic.analyze_image(
+                    current_image["filepath"],
+                    final_post,
+                    current_image["prompt"]
+                )
+                
+                self._display_image_analysis(analysis)
+                
+                # Store image iteration data
+                self.image_history.append({
+                    "iteration": iteration,
+                    "image_info": current_image,
+                    "analysis": analysis
+                })
+                
+                # Check if image is acceptable
+                if analysis["is_acceptable"]:
+                    self.console.print("\n[bold green]✅ Image meets quality standards![/bold green]")
+                    break
+                
+                # Generate improved image if not the last iteration
+                if iteration < self.max_image_iterations:
+                    self.console.print("[yellow]🔄 Generating improved image...[/yellow]")
+                    
+                    # Get improvement suggestions
+                    improved_prompt = self.image_critic.suggest_improvements(
+                        analysis, current_image["prompt"]
+                    )
+                    
+                    # Generate new image with improved prompt
+                    current_image = self.image_generator.generate_image(final_post)
+                    self._display_image_info(current_image, f"Improved Image (Iteration {iteration})")
+            
+            else:
+                self.console.print("\n[bold yellow]⚠️  Maximum image iterations reached[/bold yellow]")
+            
+            return current_image
+            
+        except Exception as e:
+            self.console.print(f"\n[red]❌ Image generation failed: {e}[/red]")
+            return None
+    
+    def _display_image_info(self, image_info: Dict, title: str):
+        """Display image generation information"""
+        info_text = f"""
+Provider: {image_info['provider']}
+Model: {image_info.get('model', 'Unknown')}
+File: {image_info['filename']}
+Path: {image_info['filepath']}
+
+Prompt: {image_info['prompt'][:100]}...
+"""
+        panel = Panel(
+            info_text.strip(),
+            title=f"[bold]{title}[/bold]",
+            border_style="purple"
+        )
+        self.console.print(panel)
+    
+    def _display_image_analysis(self, analysis: Dict):
+        """Display image critic analysis"""
+        status = "✅ Acceptable" if analysis["is_acceptable"] else "❌ Needs Improvement"
+        score = analysis["overall_score"]
+        
+        panel = Panel(
+            analysis["feedback"],
+            title=f"[bold]Image Analysis - {status} (Score: {score}/10)[/bold]",
+            border_style="green" if analysis["is_acceptable"] else "red"
+        )
+        self.console.print(panel)
+    
+    def _display_summary(self, image_info: Optional[Dict] = None):
         """Display summary of all iterations"""
         self.console.print("\n[bold blue]📊 Workflow Summary[/bold blue]\n")
         
+        # Text workflow summary
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Iteration", style="cyan", width=10)
         table.add_column("Status", width=15)
@@ -117,3 +227,45 @@ class AgentOrchestrator:
             )
         
         self.console.print(table)
+        
+        # Image workflow summary if images were generated
+        if self.enable_images and self.image_history:
+            self.console.print("\n[bold purple]🎨 Image Generation Summary[/bold purple]\n")
+            
+            image_table = Table(show_header=True, header_style="bold purple")
+            image_table.add_column("Iteration", style="cyan", width=10)
+            image_table.add_column("Score", width=10)
+            image_table.add_column("Status", width=15)
+            image_table.add_column("Key Issues", width=40)
+            
+            for item in self.image_history:
+                analysis = item["analysis"]
+                status = "✅ Good" if analysis["is_acceptable"] else "❌ Poor"
+                score = f"{analysis['overall_score']}/10"
+                
+                # Extract key issues from feedback
+                feedback_summary = analysis["feedback"].split('\n')[0][:37] + "..."
+                
+                image_table.add_row(
+                    str(item["iteration"]),
+                    score,
+                    status,
+                    feedback_summary
+                )
+            
+            self.console.print(image_table)
+        
+        # Final deliverables summary
+        self.console.print("\n[bold green]🎯 Final Deliverables[/bold green]")
+        deliverables = []
+        deliverables.append("✅ LinkedIn Post (60 words)")
+        
+        if image_info:
+            deliverables.append(f"✅ Generated Image: {image_info['filename']}")
+        elif self.enable_images:
+            deliverables.append("❌ Image generation failed")
+        else:
+            deliverables.append("⚠️  Image generation disabled")
+        
+        for deliverable in deliverables:
+            self.console.print(f"   {deliverable}")
