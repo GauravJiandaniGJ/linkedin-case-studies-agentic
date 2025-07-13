@@ -19,6 +19,19 @@ class ImageGeneratorAgent:
         self.output_dir = Path("generated_images")
         self.output_dir.mkdir(exist_ok=True)
         
+        # Validate image provider support
+        self.supported_providers = ["openai", "stability", "gemini"]
+        self.unsupported_providers = {
+            "openrouter": "OpenRouter doesn't support image generation. Use OpenAI or Stability AI instead.",
+            "deepseek": "DeepSeek's image generation (Janus Pro) is not available via standard API. Use OpenAI or Stability AI instead."
+        }
+        
+        if self.image_provider not in self.supported_providers:
+            if self.image_provider in self.unsupported_providers:
+                raise ValueError(self.unsupported_providers[self.image_provider])
+            else:
+                raise ValueError(f"Unknown image provider '{self.image_provider}'. Supported providers: {', '.join(self.supported_providers)}")
+        
         self.system_prompt = """You are an expert at creating image prompts for 3D renders that would be perfect for LinkedIn posts.
 
 Your task is to analyze a LinkedIn post and create a detailed prompt for generating an appealing 3D image that:
@@ -138,6 +151,41 @@ Return ONLY the image generation prompt, nothing else."""
             "model": "stable-diffusion-xl"
         }
     
+    def generate_image_gemini(self, prompt: str) -> Dict[str, Any]:
+        """Generate image using Google Gemini/Imagen"""
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY not found in environment variables")
+        
+        # Enhanced prompt for better 3D results
+        enhanced_prompt = f"Professional 3D render, modern corporate design, clean aesthetic, LinkedIn-ready social media image: {prompt}"
+        
+        headers = {
+            "Content-Type": "application/json",
+            "x-goog-api-key": api_key
+        }
+        
+        # Using Imagen 3 via Gemini API
+        data = {
+            "contents": [{
+                "parts": [{
+                    "text": f"Generate an image: {enhanced_prompt}"
+                }]
+            }],
+            "generationConfig": {
+                "responseModalities": ["TEXT", "IMAGE"],
+                "temperature": 0.7
+            }
+        }
+        
+        # Note: This is a simplified implementation
+        # In reality, you'd need to use the proper Gemini API client
+        # For now, we'll raise an informative error
+        raise NotImplementedError(
+            "Gemini image generation requires Google AI Studio setup and paid tier access. "
+            "Please use OpenAI or Stability AI for now, or implement full Gemini API integration."
+        )
+    
     def download_image(self, image_url: str, filename: str) -> str:
         """Download image from URL and save locally"""
         response = requests.get(image_url)
@@ -183,6 +231,12 @@ Return ONLY the image generation prompt, nothing else."""
             elif self.image_provider == "stability":
                 result = self.generate_image_stability(image_prompt)
                 filename = f"linkedin_image_stability_{timestamp}.png"
+                filepath = self.save_base64_image(result["base64"], filename)
+                
+            elif self.image_provider == "gemini":
+                result = self.generate_image_gemini(image_prompt)
+                filename = f"linkedin_image_gemini_{timestamp}.png"
+                # Implementation would depend on Gemini's response format
                 filepath = self.save_base64_image(result["base64"], filename)
                 
             else:

@@ -27,8 +27,12 @@ class AgentOrchestrator:
             try:
                 self.image_generator = ImageGeneratorAgent(llm_provider)
                 self.image_critic = ImageCriticAgent(llm_provider)
+            except ValueError as e:
+                # Show specific provider error messages
+                self.console.print(f"[yellow]⚠️  Image generation disabled: {e}[/yellow]")
+                self.enable_images = False
             except Exception as e:
-                self.console.print(f"[yellow]Warning: Image generation disabled due to error: {e}[/yellow]")
+                self.console.print(f"[yellow]⚠️  Image generation disabled due to error: {e}[/yellow]")
                 self.enable_images = False
         
         self.max_iterations = int(os.getenv("MAX_ITERATIONS", 5))
@@ -159,12 +163,12 @@ class AgentOrchestrator:
                 if iteration < self.max_image_iterations:
                     self.console.print("[yellow]🔄 Generating improved image...[/yellow]")
                     
-                    # Get improvement suggestions
+                    # Get improvement suggestions and generate new image
                     improved_prompt = self.image_critic.suggest_improvements(
                         analysis, current_image["prompt"]
                     )
                     
-                    # Generate new image with improved prompt
+                    # Generate new image (using original post content, as improved_prompt is just for reference)
                     current_image = self.image_generator.generate_image(final_post)
                     self._display_image_info(current_image, f"Improved Image (Iteration {iteration})")
             

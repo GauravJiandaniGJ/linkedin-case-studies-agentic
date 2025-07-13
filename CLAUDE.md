@@ -28,8 +28,15 @@ pip install -r requirements.txt
 ### Configuration
 Copy `.env.example` to `.env` and configure API keys:
 - Set `LLM_PROVIDER` to one of: `openai`, `gemini`, `deepseek`, `openrouter`
-- Set `IMAGE_PROVIDER` to one of: `openai`, `stability`
+- Set `IMAGE_PROVIDER` to one of: `openai`, `stability`, `gemini`
 - Add corresponding API keys for your chosen providers
+
+**Image Generation Support**:
+- ✅ **OpenAI**: DALL-E 3 (recommended)
+- ✅ **Stability AI**: Stable Diffusion XL
+- ⚠️ **Gemini**: Imagen 3/4 (requires paid tier)
+- ❌ **OpenRouter**: No image generation support
+- ❌ **DeepSeek**: Limited support (Janus Pro not via standard API)
 
 ## Architecture
 

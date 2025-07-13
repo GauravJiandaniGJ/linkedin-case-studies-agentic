@@ -65,10 +65,24 @@ class TestingAgent:
         
         # Check image generation setup
         image_provider = os.getenv("IMAGE_PROVIDER", "openai")
-        if image_provider == "openai" and not os.getenv("OPENAI_API_KEY"):
-            issues.append("IMAGE_PROVIDER is 'openai' but OPENAI_API_KEY is missing")
-        elif image_provider == "stability" and not os.getenv("STABILITY_API_KEY"):
-            issues.append("IMAGE_PROVIDER is 'stability' but STABILITY_API_KEY is missing")
+        supported_image_providers = ["openai", "stability", "gemini"]
+        unsupported_providers = ["openrouter", "deepseek"]
+        
+        if image_provider in unsupported_providers:
+            if image_provider == "openrouter":
+                issues.append("IMAGE_PROVIDER is 'openrouter' but OpenRouter doesn't support image generation")
+            elif image_provider == "deepseek":
+                issues.append("IMAGE_PROVIDER is 'deepseek' but DeepSeek's image generation is not available via standard API")
+        elif image_provider not in supported_image_providers:
+            issues.append(f"IMAGE_PROVIDER '{image_provider}' is not supported. Use: {', '.join(supported_image_providers)}")
+        else:
+            # Check API keys for supported providers
+            if image_provider == "openai" and not os.getenv("OPENAI_API_KEY"):
+                issues.append("IMAGE_PROVIDER is 'openai' but OPENAI_API_KEY is missing")
+            elif image_provider == "stability" and not os.getenv("STABILITY_API_KEY"):
+                issues.append("IMAGE_PROVIDER is 'stability' but STABILITY_API_KEY is missing")
+            elif image_provider == "gemini" and not os.getenv("GEMINI_API_KEY"):
+                issues.append("IMAGE_PROVIDER is 'gemini' but GEMINI_API_KEY is missing")
         
         # Check Python dependencies
         try:
