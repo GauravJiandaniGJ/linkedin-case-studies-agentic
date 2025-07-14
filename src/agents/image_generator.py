@@ -71,10 +71,12 @@ Return ONLY the image generation prompt, nothing else."""
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
-        
-        # Enhance prompt for better 3D results
-        enhanced_prompt = f"Professional 3D render, modern corporate style, clean design, LinkedIn-ready: {prompt}"
-        
+
+        enhanced_prompt = (
+            f"A realistic photograph of a clean corporate workspace with a close-up of a laptop displaying a chatbot interface, next to a coffee cup and documents. "
+            f"Minimalist, elegant, professional, LinkedIn-ready. {prompt}"
+        )
+
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
@@ -86,7 +88,7 @@ Return ONLY the image generation prompt, nothing else."""
             "n": 1,
             "size": "1024x1024",
             "quality": "standard",
-            "style": "natural"
+            "style": "vivid",
         }
         
         response = requests.post(
