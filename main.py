@@ -27,25 +27,10 @@ def get_case_study() -> str:
     console.print("Convert technical case studies into crispy, layman-friendly LinkedIn posts with images!\n")
     
     # Check for case study file
-    if Confirm.ask("Do you have a case study in a file?"):
-        file_path = Prompt.ask("Enter the file path")
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return f.read()
-        except Exception as e:
-            console.print(f"[red]Error reading file: {e}[/red]")
-            console.print("Please enter the case study manually.\n")
-    
-    # Manual input
-    console.print("Enter your case study (press Enter twice when done):")
-    lines = []
-    while True:
-        line = input()
-        if line == "" and lines and lines[-1] == "":
-            break
-        lines.append(line)
-    
-    return '\n'.join(lines[:-1])  # Remove last empty line
+    # Read case study from file
+    case_study_path = os.path.join(Path(__file__).parent, "case_study.txt")
+    with open(case_study_path, 'r', encoding='utf-8') as f:
+        return f.read()
 
 def main():
     """Main application entry point"""
@@ -76,8 +61,7 @@ def main():
         if not os.getenv("OPENAI_API_KEY") and not os.getenv("STABILITY_API_KEY"):
             console.print("[yellow]⚠️  No image generation API keys found. Running in text-only mode.[/yellow]")
             enable_images = False
-        elif not Confirm.ask("Generate images for the LinkedIn post?", default=True):
-            enable_images = False
+        enable_images = False # Bypassing interactive prompt for image generation
         
         # Get case study
         case_study = get_case_study()
@@ -97,7 +81,7 @@ def main():
         console.print(final_post)
         
         # Save option
-        if Confirm.ask("\nWould you like to save the final post and assets?"):
+        if True: # Always save the final post and assets
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"linkedin_post_{provider}_{timestamp}.txt"
             
@@ -134,7 +118,6 @@ def main():
             if enable_images and orchestrator.image_history:
                 latest_image = orchestrator.image_history[-1]['image_info']
                 console.print(f"[green]🖼️  Image saved: {latest_image['filepath']}[/green]")
-    
     except KeyboardInterrupt:
         console.print("\n[yellow]Process interrupted by user[/yellow]")
     except Exception as e:
