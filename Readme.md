@@ -12,6 +12,7 @@ An intelligent Python-based AI agent system that converts technical case studies
 - **Flexible Configuration**: Easy switching between LLM providers via environment variables
 
 ## 🚀 Quick Start
+![Untitled design (1) (1)](https://github.com/user-attachments/assets/87ab2d8e-09af-4f40-8422-143f2389c649)
 
 ### Prerequisites
 
